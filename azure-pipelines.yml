@@ -17,3 +17,43 @@ steps:
     echo Add other tasks to build, test, and deploy your project.
     echo See https://aka.ms/yaml
   displayName: 'Run a multi-line script'
+
+#Extracting Staging dacpac
+- task: SqlAzureDacpacDeployment@1
+  inputs:
+    AuthenticationType: 'server'
+    ServerName: '$(sdbs)'
+    DatabaseName: '$(sdb)'
+    SqlUsername: '$(sdbu)'
+    SqlPassword: '$(sdbp)'
+    deployType: 'DacpacTask'
+    DeploymentAction: 'Extract'
+    AdditionalArguments: '/tf:$(sdacpac)'
+    IpDetectionMethod: 'AutoDetect'
+
+#Extracting Production dacpac
+- task: SqlAzureDacpacDeployment@1
+  inputs:
+    AuthenticationType: 'server'
+    ServerName: '$(pdbs)'
+    DatabaseName: '$(pdb)'
+    SqlUsername: '$(pdbu)'
+    SqlPassword: '$(pdbp)'
+    deployType: 'DacpacTask'
+    DeploymentAction: 'Extract'
+    AdditionalArguments: '/tf:$(pdacpac)'
+    IpDetectionMethod: 'AutoDetect'
+
+#Generating the differences script and executing it on Production
+- task: SqlAzureDacpacDeployment@1
+  inputs:
+    AuthenticationType: 'server'
+    ServerName: '$(pdbs)'
+    DatabaseName: '$(pdb)'
+    SqlUsername: '$(pdbu)'
+    SqlPassword: '$(pdbp)'
+    deployType: 'DacpacTask'
+    DeploymentAction: 'Script'
+    DacpacFile: '$(pdacpac)'
+    AdditionalArguments: '/sf:$(sdacpac) /tdn:$(pdb) /op:$(diff)'
+    IpDetectionMethod: 'AutoDetect'
